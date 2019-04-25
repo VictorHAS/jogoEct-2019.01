@@ -2,8 +2,8 @@
 
 
 # Equipe:
-- Rivonaldo Rebouças da Silva Junior - Subturma A (Líder)
-- Victor Hermes Alves de Souza - Subturma B
+- Rivonaldo Rebouças da Silva Junior - Subturma 3A (Líder)
+- Victor Hermes Alves de Souza - Subturma 3B
 # Etapa 1 - em processo
 
 
