@@ -7,7 +7,7 @@
 
 - [x] **[Etapa 1](https://github.com/VictorHAS/jogoEct-2019.01/blob/master/etapa1.js)**
 - [x] **[Etapa 2](https://github.com/VictorHAS/jogoEct-2019.01/blob/master/etapa2.js)**
-- [ ] **Etapa 3**
+- [x] **[Etapa 3](https://github.com/VictorHAS/jogoEct-2019.01/blob/master/etapa3.js)**
 - [ ] **Etapa 4**
 - [ ] **Etapa 5**
 - [ ] **Etapa 6**
