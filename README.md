@@ -9,9 +9,9 @@
 - [x] **[Etapa 2](https://github.com/VictorHAS/jogoEct-2019.01/blob/master/etapa2.js)**
 - [x] **[Etapa 3](https://github.com/VictorHAS/jogoEct-2019.01/blob/master/etapa3.js)**
 - [x] **[Etapa 4](https://github.com/VictorHAS/jogoEct-2019.01/blob/master/etapa4.js)**
-- [ ] **Etapa 5**
-- [ ] **Etapa 6**
+- [x] **[Etapa 5](https://github.com/VictorHAS/jogoEct-2019.01/blob/master/main/sketch.js)**
+- [x] **[Etapa 6](https://github.com/VictorHAS/jogoEct-2019.01/blob/master/main/sketch.js)**
 - [ ] **Etapa 7**
 - [ ] **Etapa 8**
-- [ ] **Etapa 9**
-- [ ] **Etapa 10**
+- [x] **[Etapa 9](https://github.com/VictorHAS/jogoEct-2019.01/blob/master/main/sketch.js)**
+- [x] **[Etapa 10](https://github.com/VictorHAS/jogoEct-2019.01/blob/master/main/sketch.js)**
