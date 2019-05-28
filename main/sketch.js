@@ -7,21 +7,30 @@ var balas;
 var font;
 var xa, xy;
 var bg;
+var t1 = 0;
+var t2 = 5;
 var tela = 1;
 var angle1 = 0.0,
   segLength = 90;
 var contFrames = 0;
 //-------------------
+//-----KeyCodes------
+var cima = 87;
+var esquerda = 65;
+var direita = 68;
+//-------------------
 //-----Cenario-----
 var plataformB;
 //-------------------
 //---Inimigo Info---
-var inimigos;
+var inimigosEsquerda, inimigosCima, inimigosDireita;
 var qnt = 3;
 //-------------------
 //---Jogador Info---
 var arma;
-var direcao;
+var randomnumber;
+var tiros = 7;
+var speedBala = 10;
 var posXI = 390;
 var posYI = 300;
 var lifes = 3;
@@ -68,10 +77,12 @@ function setup() {
   jogador.addAnimation("normal", idle_anim);
   jogador.addAnimation("jump", jump_anim);
   jogador.addAnimation("walk", run_anim);
-  jogador.scale = 1;
-  qnt = 3;
+
   balas = new Group();
-  inimigos = new Group();
+  inimigosEsquerda = new Group();
+  inimigosCima = new Group();
+  inimigosDireita = new Group();
+
   plataformB = createSprite(width / 2, 500, 200, 200);
   plataformB.setDefaultCollider();
   plataformB.addImage(plataformImg);
@@ -93,9 +104,6 @@ function draw() {
     if (lifes <= 0) {
       tela = 3;
     }
-    if (direcao < 0) {
-      direcao *= -1;
-    }
     textFont(font);
     textSize(40);
     fill(100);
@@ -107,22 +115,17 @@ function draw() {
       jogador.position.y = posYI;
       lifes--;
     }
-    //----------------------DEBUG CODE-----------------------------//
-    if (keyIsDown(RIGHT_ARROW)) {
+    if (keyIsDown(direita)) {
       if (canJump) {
         jogador.changeAnimation("walk");
       }
       jogador.position.x += 5;
-      direcao = jogador.getDirection() - 90;
-      console.log(direcao);
       jogador.mirrorX(1);
       if (jogador.position.x > width) jogador.position.x = 0;
-    } else if (keyIsDown(LEFT_ARROW)) {
+    } else if (keyIsDown(esquerda)) {
       if (canJump) {
         jogador.changeAnimation("walk");
       }
-      direcao = jogador.getDirection() + 90;
-      console.log(direcao);
       jogador.position.x -= 5;
       jogador.mirrorX(-1);
       if (jogador.position.x < 0) jogador.position.x = width;
@@ -131,22 +134,15 @@ function draw() {
         jogador.changeAnimation("normal");
       }
     }
-    if (keyWentDown(CONTROL)) {
-      atirar();
-    }
-    balas.overlap(inimigos, collect);
+    balas.overlap(inimigosEsquerda, collect);
+    balas.overlap(inimigosCima, collect);
+    balas.overlap(inimigosDireita, collect);
     while (jogador.collide(plataformB)) {
       canJump = true;
       jogador.velocity.y = 0;
     }
-    if (keyIsDown(UP_ARROW)) {
+    if (keyIsDown(cima)) {
       if (canJump) {
-        if (keyIsDown(RIGHT_ARROW)) {
-          direcao = jogador.getDirection() - 90;
-        }
-        if (keyIsDown(LEFT_ARROW)) {
-          direcao = jogador.getDirection() + 90;
-        }
         jogador.changeAnimation("jump");
         jogador.velocity.y = -JUMP;
         canJump = false;
@@ -154,20 +150,20 @@ function draw() {
     }
     if (pontos <= 150) {
       qnt = 5;
-      for (var i = 0; i < inimigos.length; i++) {
-        var s = inimigos[i];
+      for (var i = 0; i < inimigosDireita.length; i++) {
+        var s = inimigosDireita[i];
         s.setSpeed(2, 180);
       }
     } else if (pontos >= 250) {
       qnt = 7;
-      for (var i = 0; i < inimigos.length; i++) {
-        var s = inimigos[i];
+      for (var i = 0; i < inimigosDireita.length; i++) {
+        var s = inimigosDireita[i];
         s.setSpeed(4, 180);
       }
     }
-    if (inimigos.length <= qnt) {
-      desenharInimigos();
-    }
+    desenharInimigos();
+    checkInimigoPositions();
+    atirar();
     drawSprites();
   }
   if (tela == 3) {
@@ -189,29 +185,74 @@ function segment(x, y, a) {
   pop();
 }
 function atirar() {
-  let a = atan2(
-    (jogador.position.y - mouseY) * -1,
-    (jogador.position.x - mouseX) * -1
-  );
-  var bala = createSprite(jogador.position.x, jogador.position.y);
-  console.log(cos(a) + " " + sin(a));
-  bala.velocity.x = cos(a);
-  bala.velocity.y = sin(a);
-  bala.setSpeed(5);
-  //bala.setSpeed(10, a);
-  bala.addImage(bala_anim);
-  bala.scale = 0.1;
-  //bala.life = 200;
-  balas.add(bala);
+  if (mouseIsPressed) {
+    if (balas.length < 2) {
+      let a = atan2(
+        (jogador.position.y - mouseY) * -1,
+        (jogador.position.x - mouseX) * -1
+      );
+      var bala = createSprite(jogador.position.x, jogador.position.y);
+      bala.velocity.x = cos(a) * speedBala;
+      bala.velocity.y = sin(a) * speedBala;
+      bala.addImage(bala_anim);
+      bala.scale = 0.1;
+      bala.life = 50;
+      balas.add(bala);
+    }
+  }
 }
 function desenharInimigos() {
-  var inmg = createSprite(1400, random(200, 350), 30, 30);
-  inmg.setDefaultCollider();
-  inmg.setSpeed(1, 180);
-  inimigos.add(inmg);
+  if (
+    inimigosEsquerda.length + inimigosCima.length + inimigosDireita.length <=
+    qnt
+  ) {
+    randomnumber = getRndInteger(0, 3);
+    if (randomnumber === 0) {
+      var inmg = createSprite(0, random(200, 350), 30, 30);
+      inmg.setDefaultCollider();
+      inmg.setSpeed(1, 0);
+      inimigosEsquerda.add(inmg);
+    }
+    if (randomnumber === 1) {
+      var inmg = createSprite(1400, random(200, 350), 30, 30);
+      inmg.setDefaultCollider();
+      inmg.setSpeed(1, 180);
+      inimigosDireita.add(inmg);
+    }
+    if (randomnumber === 2) {
+      var inmg = createSprite(random(600, 700), 0, 30, 30);
+      inmg.setDefaultCollider();
+      inmg.setSpeed(1, 90);
+      inimigosCima.add(inmg);
+    }
+  }
 }
 function collect(collector, collected) {
-  pontos += random(2, 20);
+  pontos += 40;
   collector.remove();
   collected.remove();
+  qnt -= 1;
+}
+function checkInimigoPositions() {
+  for (var i = 0; i < inimigosEsquerda.length; i++) {
+    var s = inimigosEsquerda[i];
+    if (s.position.x > 1300) {
+      s.remove();
+    }
+  }
+  for (var i = 0; i < inimigosCima.length; i++) {
+    var s = inimigosCima[i];
+    if (s.position.y > 500) {
+      s.remove();
+    }
+  }
+  for (var i = 0; i < inimigosDireita.length; i++) {
+    var s = inimigosDireita[i];
+    if (s.position.x < -5) {
+      s.remove();
+    }
+  }
+}
+function getRndInteger(min, max) {
+  return Math.floor(Math.random() * (max - min)) + min;
 }
