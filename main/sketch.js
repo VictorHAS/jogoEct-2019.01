@@ -35,22 +35,21 @@ var speedBala = 25;
 var posXI = 390;
 var posYI = 300;
 var lifes = 3;
+var life = 1000;
 var pontos = 0;
 var jogador, arma;
 var JUMP = 20;
 //-------------------
 //-----Cenario-----
 var GRAVITY = 0.5;
-var arma_img;
 var idle_anim;
 var gameover_anim;
 var jump_anim;
 var run_anim;
-var bala_anim;
+var bala_anim, balaImpact_anim;
 var bg1, bg2;
 //-------------------
 function preload() {
-  arma_img = loadImage("../assets/arma.png");
   plataformImg = loadImage("../assets/PlataformaBaixo.png");
   idle_anim = loadAnimation(
     "../assets/idle/Armature_IDLE_00.png",
@@ -61,16 +60,21 @@ function preload() {
     "../assets/gameover/gameover99.png"
   );
   jump_anim = loadAnimation(
-    "../assets/jump/Armature_JUMP_14.png",
+    "../assets/jump/Armature_JUMP_23.png",
     "../assets/jump/Armature_JUMP_38.png"
   );
+  jump_anim.looping = false;
   run_anim = loadAnimation(
     "../assets/walk/Armature_RUN_00.png",
     "../assets/walk/Armature_RUN_15.png"
   );
   bala_anim = loadAnimation(
-    "../assets/bullet/Armature_Bullet-Flyng_00.png",
-    "../assets/bullet/Armature_Bullet-Flyng_14.png"
+    "../assets/bullet/balaVoando/Armature_Bullet-Flyng_00.png",
+    "../assets/bullet/balaVoando/Armature_Bullet-Flyng_14.png"
+  );
+  balaImpact_anim = loadAnimation(
+    "../assets/bullet/balaColidindo/Armature_Bullet-Impact_00.png",
+    "../assets/bullet/balaColidindo/Armature_Bullet-Impact_10.png"
   );
   bg1 = loadImage("../assets/background0.png");
   bg2 = loadImage("../assets/background.jpg");
@@ -79,11 +83,14 @@ function preload() {
 function setup() {
   angleMode(RADIANS);
   createCanvas(1280, 500);
+
   bala_anim.frameDelay = 1;
+  balaImpact_anim.frameDelay = 1;
   idle_anim.frameDelay = 2;
-  jump_anim.frameDelay = 2;
+  jump_anim.frameDelay = 4;
   run_anim.frameDelay = 3;
   gameover_anim.frameDelay = 2;
+
   jogador = createSprite(posXI, posYI, 50, 100);
   jogador.setDefaultCollider();
   jogador.debug = true;
@@ -93,18 +100,20 @@ function setup() {
   jogador.addAnimation("jump", jump_anim);
   jogador.addAnimation("walk", run_anim);
   jogador.scale = 0.2;
+
   balas = new Group();
   inimigosEsquerda = new Group();
   inimigosCima = new Group();
   inimigosDireita = new Group();
+
   tirosDisponivel = tiros;
+
   plataformB = createSprite(width / 2, 500, 200, 200);
   plataformB.setDefaultCollider();
   plataformB.addImage(plataformImg);
 }
 function draw() {
   background(bg1);
-  rect(150, 20, 1000, 50);
   if (tela == 1) {
     textFont(font);
     textSize(40);
@@ -119,92 +128,37 @@ function draw() {
     if (lifes <= 0) {
       tela = 3;
     }
+    fill(255);
+    rect(150, 20, 1000, 50, 10, 10);
+    fill(255, 0, 0);
+    rect(150, 20, 1000, 50, 10, 10);
+    fill(0, 255, 0);
+    rect(150, 20, life, 50, 10, 10);
     textFont(font);
     textSize(40);
     fill(100);
-    text("Vidas: " + lifes, 30, 30);
+    text("Vida: " + life, 592, 57);
+    text("Pontos: " + pontos, 150, 110);
+    text("Tiros: " + tirosDisponivel, 1030, 110);
+    //jogador functions
+    jogadorChecks();
+    movimentoJogador();
+    pulo();
+    //----------------
 
-    text("Tiros: " + tirosDisponivel, 30, 65);
-    text("Pontos: " + pontos, 30, 100);
-    jogador.velocity.y += GRAVITY;
-    if (jogador.position.y > height) {
-      jogador.position.x = posXI;
-      jogador.position.y = posYI;
-      lifes--;
-    }
-    if (keyIsDown(direita)) {
-      if (canJump) {
-        jogador.changeAnimation("walk");
-      }
-      jogador.position.x += 5;
-      jogador.mirrorX(1);
-      if (jogador.position.x > width) jogador.position.x = 0;
-    } else if (keyIsDown(esquerda)) {
-      if (canJump) {
-        jogador.changeAnimation("walk");
-      }
-      jogador.position.x -= 5;
-      jogador.mirrorX(-1);
-      if (jogador.position.x < 0) jogador.position.x = width;
-    } else {
-      if (canJump) {
-        jogador.changeAnimation("normal");
-      }
-    }
-    if (jump_anim.getFrame() === jump_anim.getLastFrame()) {
-      jump_anim.stop();
-    }
-    balas.overlap(inimigosEsquerda, collect);
-    balas.overlap(inimigosCima, collect);
-    balas.overlap(inimigosDireita, collect);
-    if (jogador.collide(plataformB)) {
-      canJump = true;
-      jumping = false;
-      jogador.velocity.y = 0;
-    }
-    if (keyIsDown(cima)) {
-      if (canJump) {
-        jogador.changeAnimation("jump");
-        jogador.velocity.y = -JUMP;
-        jumping = true;
-        canJump = false;
-      }
-    }
-    if (pontos <= 150) {
-      qnt = 3;
-      for (var i = 0; i < inimigosDireita.length; i++) {
-        var s = inimigosDireita[i];
-        s.setSpeed(2, 180);
-      }
-    } else if (pontos >= 250) {
-      qnt = 4;
-      for (var i = 0; i < inimigosDireita.length; i++) {
-        var s = inimigosDireita[i];
-        s.setSpeed(4, 180);
-      }
-    }
+    //functions cenario
+    colisores();
     desenharInimigos();
+    fases();
     checkInimigoPositions();
     drawSprites();
     useQuadTree(true);
+    morreu();
+    //----------------
   }
   if (tela == 3) {
-    animation(gameover_anim, width / 2, height / 2);
-    lifes = 3;
-    jogador.velocity.x = 0;
-    jogador.position.x = posXI;
-    jogador.position.y = posYI;
-    if (keyIsDown(13)) {
-      tela = 2;
-    }
+    gameOver();
   }
-}
-function segment(x, y, a) {
-  push();
-  translate(x, y);
-  rotate(a);
-  line(0, 0, segLength, 0);
-  pop();
 }
 function mousePressed() {
   if (tela === 2 && contTiros >= tiros && reloading == false) {
@@ -253,12 +207,6 @@ function desenharInimigos() {
     }
   }
 }
-function collect(collector, collected) {
-  pontos += 40;
-  collector.remove();
-  collected.remove();
-  qnt -= 1;
-}
 function checkInimigoPositions() {
   for (var i = 0; i < inimigosEsquerda.length; i++) {
     var s = inimigosEsquerda[i];
@@ -284,12 +232,126 @@ function getRndInteger(min, max) {
 }
 function reloadGun() {
   reloading = true;
-  console.log("reloading...");
   tirosDisponivel = "Reloading...";
   setTimeout(() => {
     reloading = false;
     contTiros = 0;
     tirosDisponivel = tiros;
-    console.log("Loaded");
-  }, 2000);
+  }, 1500);
+}
+function pulo() {
+  if (keyIsDown(cima) && canJump) {
+    jogador.changeAnimation("jump");
+    jogador.velocity.y = -JUMP;
+    jumping = true;
+    canJump = false;
+  }
+}
+function fases() {
+  if (pontos <= 150) {
+    qnt = 3;
+    for (var i = 0; i < inimigosDireita.length; i++) {
+      var s = inimigosDireita[i];
+      s.setSpeed(2, 180);
+    }
+  } else if (pontos >= 250) {
+    qnt = 4;
+    for (var i = 0; i < inimigosDireita.length; i++) {
+      var s = inimigosDireita[i];
+      s.setSpeed(4, 180);
+    }
+  }
+}
+function movimentoJogador() {
+  if (keyIsDown(direita)) {
+    if (canJump) {
+      jogador.changeAnimation("walk");
+    }
+    jogador.position.x += 5;
+    jogador.mirrorX(1);
+    if (jogador.position.x > width) jogador.position.x = 0;
+  } else if (keyIsDown(esquerda)) {
+    if (canJump) {
+      jogador.changeAnimation("walk");
+    }
+    jogador.position.x -= 5;
+    jogador.mirrorX(-1);
+    if (jogador.position.x < 0) jogador.position.x = width;
+  } else {
+    if (canJump) {
+      jogador.changeAnimation("normal");
+    }
+  }
+}
+function jogadorChecks() {
+  jogador.velocity.y += GRAVITY;
+  if (jogador.position.y > height) {
+    jogador.position.x = posXI;
+    jogador.position.y = posYI;
+    lifes--;
+  }
+  if (jogador.collide(plataformB)) {
+    if (jumping) {
+      jogador.animation.changeFrame(0);
+    }
+    canJump = true;
+    jumping = false;
+    jogador.velocity.y = 0;
+  }
+}
+function colisores() {
+  balas.overlap(inimigosEsquerda, balaCollideEnemy);
+  balas.overlap(inimigosCima, balaCollideEnemy);
+  balas.overlap(inimigosDireita, balaCollideEnemy);
+
+  jogador.overlap(inimigosEsquerda, enemyCollidePlayer);
+  jogador.overlap(inimigosCima, enemyCollidePlayer);
+  jogador.overlap(inimigosDireita, enemyCollidePlayer);
+}
+function balaCollideEnemy(collector, collected) {
+  pontos += 40;
+  var explosion = createSprite(collector.position.x, collector.position.y);
+  explosion.addAnimation("balaExplosao", balaImpact_anim);
+  explosion.animation.looping = false;
+  explosion.changeAnimation("balaExplosao");
+  setTimeout(() => {
+    explosion.remove();
+  }, 300);
+  collector.remove();
+  collected.remove();
+}
+function enemyCollidePlayer(collector, collected) {
+  collected.remove();
+  var interval = setInterval(perderLife, 100);
+  setTimeout(() => {
+    window.clearInterval(interval);
+  }, 220);
+}
+function perderLife() {
+  life -= 5;
+}
+function morreu() {
+  if (life <= 950) {
+    tela = 3;
+    gameOver();
+  }
+}
+function gameOver() {
+  animation(gameover_anim, width / 2, height / 2);
+  jogador.velocity.x = 0;
+  jogador.position.x = posXI;
+  jogador.position.y = posYI;
+  if (keyIsDown(13)) {
+    resetarFases();
+    life = 1000;
+    tela = 2;
+  }
+}
+function resetarFases() {
+  tirosDisponivel = tiros;
+  pontos = 0;
+  balas.removeSprites();
+  inimigosEsquerda.removeSprites();
+  inimigosCima.removeSprites();
+  inimigosDireita.removeSprites();
 }
