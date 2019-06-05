@@ -81,7 +81,7 @@ function preload() {
   font = loadFont("../assets/True2D.ttf");
 }
 function setup() {
-  angleMode(RADIANS);
+  angleMode(DEGREES);
   createCanvas(1280, 500);
 
   bala_anim.frameDelay = 1;
@@ -160,27 +160,6 @@ function draw() {
     gameOver();
   }
 }
-function mousePressed() {
-  if (tela === 2 && contTiros >= tiros && reloading == false) {
-    reloadGun();
-  } else if (reloading == false && balas.length < tiros && tela === 2) {
-    let a = atan2(
-      (jogador.position.y - mouseY) * -1,
-      (jogador.position.x - mouseX) * -1
-    );
-    var bala = createSprite(jogador.position.x, jogador.position.y);
-    bala.rotateToDirection = true;
-    bala.velocity.x = cos(a) * speedBala;
-    bala.velocity.y = sin(a) * speedBala;
-    bala.addAnimation("bala", bala_anim);
-    bala.changeAnimation("bala");
-    bala.scale = 0.3;
-    bala.life = 50;
-    balas.add(bala);
-    tirosDisponivel--;
-    contTiros++;
-  }
-}
 function desenharInimigos() {
   if (
     inimigosEsquerda.length + inimigosCima.length + inimigosDireita.length <=
@@ -230,23 +209,6 @@ function checkInimigoPositions() {
 function getRndInteger(min, max) {
   return Math.floor(Math.random() * (max - min)) + min;
 }
-function reloadGun() {
-  reloading = true;
-  tirosDisponivel = "Reloading...";
-  setTimeout(() => {
-    reloading = false;
-    contTiros = 0;
-    tirosDisponivel = tiros;
-  }, 1500);
-}
-function pulo() {
-  if (keyIsDown(cima) && canJump) {
-    jogador.changeAnimation("jump");
-    jogador.velocity.y = -JUMP;
-    jumping = true;
-    canJump = false;
-  }
-}
 function fases() {
   if (pontos <= 150) {
     qnt = 3;
@@ -260,43 +222,6 @@ function fases() {
       var s = inimigosDireita[i];
       s.setSpeed(4, 180);
     }
-  }
-}
-function movimentoJogador() {
-  if (keyIsDown(direita)) {
-    if (canJump) {
-      jogador.changeAnimation("walk");
-    }
-    jogador.position.x += 5;
-    jogador.mirrorX(1);
-    if (jogador.position.x > width) jogador.position.x = 0;
-  } else if (keyIsDown(esquerda)) {
-    if (canJump) {
-      jogador.changeAnimation("walk");
-    }
-    jogador.position.x -= 5;
-    jogador.mirrorX(-1);
-    if (jogador.position.x < 0) jogador.position.x = width;
-  } else {
-    if (canJump) {
-      jogador.changeAnimation("normal");
-    }
-  }
-}
-function jogadorChecks() {
-  jogador.velocity.y += GRAVITY;
-  if (jogador.position.y > height) {
-    jogador.position.x = posXI;
-    jogador.position.y = posYI;
-    lifes--;
-  }
-  if (jogador.collide(plataformB)) {
-    if (jumping) {
-      jogador.animation.changeFrame(0);
-    }
-    canJump = true;
-    jumping = false;
-    jogador.velocity.y = 0;
   }
 }
 function colisores() {
@@ -355,3 +280,89 @@ function resetarFases() {
   inimigosCima.removeSprites();
   inimigosDireita.removeSprites();
 }
+function jogadorChecks() {
+  jogador.velocity.y += GRAVITY;
+  if (jogador.position.y > height) {
+    jogador.position.x = posXI;
+    jogador.position.y = posYI;
+    lifes--;
+  }
+  if (jogador.collide(plataformB)) {
+    if (jumping) {
+      jogador.animation.changeFrame(0);
+    }
+    canJump = true;
+    jumping = false;
+    jogador.velocity.y = 0;
+  }
+}
+function reloadGun() {
+  reloading = true;
+  tirosDisponivel = "Reloading...";
+  setTimeout(() => {
+    reloading = false;
+    contTiros = 0;
+    tirosDisponivel = tiros;
+  }, 1500);
+}
+function pulo() {
+  if (keyIsDown(cima) && canJump) {
+    jogador.changeAnimation("jump");
+    jogador.velocity.y = -JUMP;
+    jumping = true;
+    canJump = false;
+  }
+}
+function getAngloDeDisparo(x, y) {
+  return atan2((y - mouseY) * -1, (x - mouseX) * -1);
+}
+function movimentoJogador() {
+  if (keyIsDown(direita)) {
+    if (canJump) {
+      jogador.changeAnimation("walk");
+    }
+    jogador.position.x += 5;
+    if (jogador.position.x > width) jogador.position.x = 0;
+  } else if (keyIsDown(esquerda)) {
+    if (canJump) {
+      jogador.changeAnimation("walk");
+    }
+    jogador.position.x -= 5;
+    if (jogador.position.x < 0) jogador.position.x = width;
+  } else {
+    if (canJump) {
+      jogador.changeAnimation("normal");
+    }
+  }
+}
+function mousePressed() {
+  if (tela === 2 && contTiros >= tiros && reloading == false) {
+    reloadGun();
+  } else if (reloading == false && balas.length < tiros && tela === 2) {
+    let a = getAngloDeDisparo(jogador.position.x, jogador.position.y);
+    console.log(a);
+    var bala = createSprite(jogador.position.x, jogador.position.y);
+    bala.rotateToDirection = true;
+    bala.velocity.x = cos(a) * speedBala;
+    bala.velocity.y = sin(a) * speedBala;
+    bala.addAnimation("bala", bala_anim);
+    bala.changeAnimation("bala");
+    bala.scale = 0.3;
+    bala.life = 50;
+    balas.add(bala);
+    tirosDisponivel--;
+    contTiros++;
+  }
+}
+//-----WIP-------
+function mouseMoved() {
+  let a = getAngloDeDisparo(jogador.position.x, jogador.position.y);
+  if (a >= -89 && a <= 89) {
+    jogador.mirrorX(1);
+    console.log("a");
+  } else {
+    jogador.mirrorX(1);
+    console.log("b");
+  }
+}
+//----------------
