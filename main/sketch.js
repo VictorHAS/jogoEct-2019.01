@@ -24,8 +24,11 @@ var qnt = 2;
 //-------------------
 //---Jogador Info---
 var arma;
+var parado = false;
 var jumping = false;
 var reloading = false;
+var running = false;
+var shooting = false;
 var intervaloEntreTiros = 0.5; // em segundos
 var randomnumber;
 var tirosDisponivel = 0;
@@ -42,10 +45,11 @@ var JUMP = 20;
 //-------------------
 //-----Cenario-----
 var GRAVITY = 0.5;
-var idle_anim;
+var idle_anim, idle_shot_anim;
 var gameover_anim;
 var jump_anim;
-var run_anim;
+var run_anim, run_atirando_anim;
+var hurt_anim;
 var bala_anim, balaImpact_anim;
 var bg1, bg2;
 //-------------------
@@ -54,6 +58,10 @@ function preload() {
   idle_anim = loadAnimation(
     "../assets/idle/Armature_IDLE_00.png",
     "../assets/idle/Armature_IDLE_39.png"
+  );
+  idle_shot_anim = loadAnimation(
+    "../assets/shotIdle/Armature_SHOT_0.png",
+    "../assets/shotIdle/Armature_SHOT_7.png"
   );
   gameover_anim = loadAnimation(
     "../assets/gameover/gameover01.png",
@@ -67,6 +75,10 @@ function preload() {
   run_anim = loadAnimation(
     "../assets/walk/Armature_RUN_00.png",
     "../assets/walk/Armature_RUN_15.png"
+  );
+  run_atirando_anim = loadAnimation(
+    "../assets/walk/RunShot/Armature_RUN-and-SHOT_00.png",
+    "../assets/walk/RunShot/Armature_RUN-and-SHOT_05.png"
   );
   bala_anim = loadAnimation(
     "../assets/bullet/balaVoando/Armature_Bullet-Flyng_00.png",
@@ -90,15 +102,18 @@ function setup() {
   jump_anim.frameDelay = 4;
   run_anim.frameDelay = 3;
   gameover_anim.frameDelay = 2;
+  run_atirando_anim.frameDelay = 2;
+  idle_shot_anim.frameDelay = 2;
 
   jogador = createSprite(posXI, posYI, 50, 100);
   jogador.setDefaultCollider();
-  jogador.debug = true;
   jogador.shapeColor = color(25, 84);
   jogador.friction = 0.05;
   jogador.addAnimation("normal", idle_anim);
+  jogador.addAnimation("normalShot", idle_shot_anim);
   jogador.addAnimation("jump", jump_anim);
   jogador.addAnimation("walk", run_anim);
+  jogador.addAnimation("walkAtirando", run_atirando_anim);
   jogador.scale = 0.2;
 
   balas = new Group();
@@ -307,9 +322,14 @@ function reloadGun() {
 }
 function pulo() {
   if (keyIsDown(cima) && canJump) {
-    jogador.changeAnimation("jump");
+    if (shooting) {
+      jogador.changeAnimation("walkAtirando");
+    } else {
+      jogador.changeAnimation("jump");
+    }
     jogador.velocity.y = -JUMP;
     jumping = true;
+    running = false;
     canJump = false;
   }
 }
@@ -318,19 +338,33 @@ function getAngloDeDisparo(x, y) {
 }
 function movimentoJogador() {
   if (keyIsDown(direita)) {
-    if (canJump) {
+    running = true;
+    parado = false;
+    if (canJump && !shooting) {
       jogador.changeAnimation("walk");
+    } else if (canJump && shooting && !parado) {
+      jogador.changeAnimation("walkAtirando");
+    } else if (canJump && shooting && parado) {
+      jogador.changeAnimation("normalShot");
     }
     jogador.position.x += 5;
     if (jogador.position.x > width) jogador.position.x = 0;
   } else if (keyIsDown(esquerda)) {
-    if (canJump) {
+    running = true;
+    parado = false;
+    if (canJump && !shooting) {
       jogador.changeAnimation("walk");
+    } else if (canJump && shooting && !parado) {
+      jogador.changeAnimation("walkAtirando");
+    } else if (canJump && shooting && parado) {
+      jogador.changeAnimation("normalShot");
     }
     jogador.position.x -= 5;
     if (jogador.position.x < 0) jogador.position.x = width;
   } else {
-    if (canJump) {
+    if (canJump && !shooting) {
+      running = false;
+      parado = true;
       jogador.changeAnimation("normal");
     }
   }
@@ -340,7 +374,6 @@ function mousePressed() {
     reloadGun();
   } else if (reloading == false && balas.length < tiros && tela === 2) {
     let a = getAngloDeDisparo(jogador.position.x, jogador.position.y);
-    console.log(a);
     var bala = createSprite(jogador.position.x, jogador.position.y);
     bala.rotateToDirection = true;
     bala.velocity.x = cos(a) * speedBala;
@@ -350,19 +383,24 @@ function mousePressed() {
     bala.scale = 0.3;
     bala.life = 50;
     balas.add(bala);
+    shooting = true;
+    if (running) {
+      jogador.changeAnimation("walkAtirando");
+    } else if (parado) {
+      jogador.changeAnimation("normalShot");
+    }
+    setTimeout(() => {
+      shooting = false;
+    }, 350);
     tirosDisponivel--;
     contTiros++;
   }
 }
-//-----WIP-------
 function mouseMoved() {
   let a = getAngloDeDisparo(jogador.position.x, jogador.position.y);
   if (a >= -89 && a <= 89) {
     jogador.mirrorX(1);
-    console.log("a");
   } else {
-    jogador.mirrorX(1);
-    console.log("b");
+    jogador.mirrorX(-1);
   }
 }
-//----------------
