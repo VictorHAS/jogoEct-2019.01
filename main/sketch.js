@@ -20,7 +20,12 @@ var plataformB;
 //-------------------
 //---Inimigo Info---
 var inimigosEsquerda, inimigosCima, inimigosDireita;
+var dx;
 var qnt = 2;
+let theta = 0.0;
+let amplitude = 75.0;
+let period = 11.0;
+let yvalues;
 //-------------------
 //---Jogador Info---
 var arma;
@@ -37,14 +42,13 @@ var contTiros = 0;
 var speedBala = 25;
 var posXI = 390;
 var posYI = 300;
-var lifes = 3;
 var life = 1000;
 var pontos = 0;
 var jogador, arma;
 var JUMP = 20;
 //-------------------
 //-----Cenario-----
-var GRAVITY = 0.5;
+var GRAVITY = 1;
 var idle_anim, idle_shot_anim;
 var gameover_anim;
 var jump_anim;
@@ -93,7 +97,7 @@ function preload() {
   font = loadFont("../assets/True2D.ttf");
 }
 function setup() {
-  angleMode(DEGREES);
+  angleMode(RADIANS);
   createCanvas(1280, 500);
 
   bala_anim.frameDelay = 1;
@@ -107,7 +111,6 @@ function setup() {
 
   jogador = createSprite(posXI, posYI, 50, 100);
   jogador.setDefaultCollider();
-  jogador.shapeColor = color(25, 84);
   jogador.friction = 0.05;
   jogador.addAnimation("normal", idle_anim);
   jogador.addAnimation("normalShot", idle_shot_anim);
@@ -126,6 +129,10 @@ function setup() {
   plataformB = createSprite(width / 2, 500, 200, 200);
   plataformB.setDefaultCollider();
   plataformB.addImage(plataformImg);
+  dxE = (TWO_PI / period) * 16;
+  dxD = (PI / period) * 16;
+  yvaluesE = new Array(floor((width + 16) / 16));
+  yvaluesD = new Array(floor((width + 16) / 16));
 }
 function draw() {
   background(bg1);
@@ -140,9 +147,6 @@ function draw() {
     if (keyIsDown(13)) tela = 2;
   }
   if (tela == 2) {
-    if (lifes <= 0) {
-      tela = 3;
-    }
     fill(255);
     rect(150, 20, 1000, 50, 10, 10);
     fill(255, 0, 0);
@@ -160,8 +164,8 @@ function draw() {
     movimentoJogador();
     pulo();
     //----------------
-
     //functions cenario
+    calcWave();
     colisores();
     desenharInimigos();
     fases();
@@ -184,17 +188,15 @@ function desenharInimigos() {
     if (randomnumber === 0) {
       var inmg = createSprite(0, random(200, 350), 30, 30);
       inmg.setDefaultCollider();
-      inmg.setSpeed(1, 0);
       inimigosEsquerda.add(inmg);
     }
     if (randomnumber === 1) {
-      var inmg = createSprite(1400, random(200, 350), 30, 30);
+      var inmg = createSprite(1000, random(200, 350), 30, 30);
       inmg.setDefaultCollider();
-      inmg.setSpeed(1, 180);
       inimigosDireita.add(inmg);
     }
     if (randomnumber === 2) {
-      var inmg = createSprite(random(600, 700), 0, 30, 30);
+      var inmg = createSprite(random(450, 900), 0, 30, 30);
       inmg.setDefaultCollider();
       inmg.setSpeed(1, 90);
       inimigosCima.add(inmg);
@@ -202,6 +204,16 @@ function desenharInimigos() {
   }
 }
 function checkInimigoPositions() {
+  for (x = 0; x < inimigosEsquerda.length; x++) {
+    for (i = 0; i < yvaluesE.length; i++) {
+      inimigosEsquerda.get(x).setSpeed(3, yvaluesE[i] / 2);
+    }
+  }
+  for (x = 0; x < inimigosDireita.length; x++) {
+    for (i = 0; i < yvaluesD.length; i++) {
+      inimigosDireita.get(x).setSpeed(3, yvaluesD[i] / 2);
+    }
+  }
   for (var i = 0; i < inimigosEsquerda.length; i++) {
     var s = inimigosEsquerda[i];
     if (s.position.x > 1300) {
@@ -216,7 +228,7 @@ function checkInimigoPositions() {
   }
   for (var i = 0; i < inimigosDireita.length; i++) {
     var s = inimigosDireita[i];
-    if (s.position.x < -5) {
+    if (s.position.x < -5 || s.position.x > 1500) {
       s.remove();
     }
   }
@@ -229,13 +241,11 @@ function fases() {
     qnt = 3;
     for (var i = 0; i < inimigosDireita.length; i++) {
       var s = inimigosDireita[i];
-      s.setSpeed(2, 180);
     }
   } else if (pontos >= 250) {
     qnt = 4;
     for (var i = 0; i < inimigosDireita.length; i++) {
       var s = inimigosDireita[i];
-      s.setSpeed(4, 180);
     }
   }
 }
@@ -284,13 +294,16 @@ function gameOver() {
   if (keyIsDown(13)) {
     resetarFases();
     life = 1000;
+    tirosDisponivel = tiros;
     tela = 2;
   }
 }
 function resetarFases() {
   tirosDisponivel = tiros;
+  contTiros = 0;
+  reloading = false;
   pontos = 0;
-  balas.removeSprites();
+  balas.clear();
   inimigosEsquerda.removeSprites();
   inimigosCima.removeSprites();
   inimigosDireita.removeSprites();
@@ -300,7 +313,6 @@ function jogadorChecks() {
   if (jogador.position.y > height) {
     jogador.position.x = posXI;
     jogador.position.y = posYI;
-    lifes--;
   }
   if (jogador.collide(plataformB)) {
     if (jumping) {
@@ -333,7 +345,7 @@ function pulo() {
     canJump = false;
   }
 }
-function getAngloDeDisparo(x, y) {
+function getAnguloDeDisparo(x, y) {
   return atan2((y - mouseY) * -1, (x - mouseX) * -1);
 }
 function movimentoJogador() {
@@ -370,10 +382,11 @@ function movimentoJogador() {
   }
 }
 function mousePressed() {
+  if (jogador === undefined) return;
   if (tela === 2 && contTiros >= tiros && reloading == false) {
     reloadGun();
   } else if (reloading == false && balas.length < tiros && tela === 2) {
-    let a = getAngloDeDisparo(jogador.position.x, jogador.position.y);
+    let a = getAnguloDeDisparo(jogador.position.x, jogador.position.y);
     var bala = createSprite(jogador.position.x, jogador.position.y);
     bala.rotateToDirection = true;
     bala.velocity.x = cos(a) * speedBala;
@@ -397,10 +410,25 @@ function mousePressed() {
   }
 }
 function mouseMoved() {
-  let a = getAngloDeDisparo(jogador.position.x, jogador.position.y);
-  if (a >= -89 && a <= 89) {
-    jogador.mirrorX(1);
-  } else {
-    jogador.mirrorX(-1);
+  if (jogador !== undefined) {
+    let a = degrees(getAnguloDeDisparo(jogador.position.x, jogador.position.y));
+    if (a >= -89 && a <= 89) {
+      jogador.mirrorX(1);
+    } else {
+      jogador.mirrorX(-1);
+    }
+  }
+}
+function calcWave() {
+  theta += 0.02;
+  let x1 = theta;
+  let x2 = theta;
+  for (let i = 0; i < yvaluesE.length; i++) {
+    yvaluesE[i] = sin(x1) * amplitude;
+    x1 += dxE;
+  }
+  for (let i = 0; i < yvaluesD.length; i++) {
+    yvaluesD[i] = sin(-x2) * amplitude;
+    x2 += dxD;
   }
 }
