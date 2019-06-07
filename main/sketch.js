@@ -5,6 +5,7 @@ var jumping = false;
 var reloading = false;
 var running = false;
 var shooting = false;
+var deslagaessejogoplmds=false
 //-------------------
 //-----Variaveis-----
 var dx, dy, targetX, targetY;
@@ -28,7 +29,7 @@ var inimigosEsquerda, inimigosCima, inimigosDireita;
 var dx;
 var qnt = 2;
 let theta = 0.0;
-let amplitude = 75.0;
+let amplitude = 20.0;
 let period = 11.0;
 let yvalues;
 //-------------------
@@ -187,13 +188,6 @@ function draw() {
   }
 }
 function desenharInimigos() {
-  console.log(
-    inimigosEsquerda.length +
-      inimigosCima.length +
-      inimigosDireita.length +
-      " \n" +
-      qnt
-  );
   if (
     inimigosEsquerda.length + inimigosCima.length + inimigosDireita.length <=
     qnt
@@ -201,28 +195,34 @@ function desenharInimigos() {
     randomnumber = getRndInteger(0, 3);
     if (randomnumber === 0) {
       var inmg = createSprite(0, random(300, 400), 30, 30);
+      if(!	deslagaessejogoplmds){
       inmg.addAnimation("fly", enemy_fly_anim);
       inmg.changeAnimation("fly");
       inmg.scale = 0.2;
+      }
       inmg.setDefaultCollider();
       inmg.rotateToDirection = true;
       inimigosEsquerda.add(inmg);
     }
     if (randomnumber === 1) {
       var inmg = createSprite(1300, random(200, 350), 30, 30);
+      if(!deslagaessejogoplmds){
       inmg.addAnimation("fly", enemy_fly_anim);
       inmg.changeAnimation("fly");
       inmg.scale = 0.2;
-      inmg.setDefaultCollider();
       inmg.mirrorY(-1);
+      }
+      inmg.setDefaultCollider();
       inmg.rotateToDirection = true;
       inimigosDireita.add(inmg);
     }
     if (randomnumber === 2) {
       var inmg = createSprite(random(450, 900), 0, 30, 30);
+      if(!deslagaessejogoplmds){
       inmg.addAnimation("fly", enemy_fly_anim);
       inmg.changeAnimation("fly");
       inmg.scale = 0.2;
+      }
       inmg.setDefaultCollider();
       inmg.rotateToDirection = true;
       inmg.setSpeed(5, 90);
@@ -235,17 +235,25 @@ function checkInimigoPositions() {
     inimigosEsquerdaSpeedWave(1);
     inimigosDireitaSpeedWave(1);
   } else if (nivel == 2) {
-    inimigosEsquerdaSpeedWave(2);
-    inimigosDireitaSpeedWave(2);
-  } else if (nivel == 3) {
+    qnt = 5;
+    tiros = 8;
     inimigosEsquerdaSpeedWave(3);
     inimigosDireitaSpeedWave(3);
-  } else if (nivel == 4) {
-    inimigosEsquerdaSpeedWave(4);
-    inimigosDireitaSpeedWave(4);
-  } else if (nivel == 5) {
+  } else if (nivel == 3) {
+    qnt = 6;
+    tiros = 9;
     inimigosEsquerdaSpeedWave(5);
     inimigosDireitaSpeedWave(5);
+  } else if (nivel == 4) {
+    qnt = 7;
+    tiros = 10;
+    inimigosEsquerdaSpeedWave(7);
+    inimigosDireitaSpeedWave(7);
+  } else if (nivel == 5) {
+    qnt = 8;
+    tiros = 11;
+    inimigosEsquerdaSpeedWave(9);
+    inimigosDireitaSpeedWave(9);
   }
   for (x = 0; x < inimigosEsquerda.length; x++) {
     for (i = 0; i < yvaluesE.length; i++) {
@@ -338,6 +346,7 @@ function resetarFases() {
   tirosDisponivel = tiros;
   contTiros = 0;
   nivel = 1;
+  qnt=3
   reloading = false;
   pontos = 0;
   balas.clear();
@@ -480,7 +489,7 @@ function inimigosDireitaSpeedWave(speed) {
   for (x = 0; x < inimigosDireita.length; x++) {
     for (i = 0; i < yvaluesD.length; i++) {
       inimigosDireita.get(x).setSpeed(speed, yvaluesD[i] / 2);
-      inimigosDireita.get(x).velocity.x = -xvelocidade;
+      inimigosDireita.get(x).velocity.x = -speed;
     }
   }
 }
