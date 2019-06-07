@@ -5,7 +5,7 @@ var jumping = false;
 var reloading = false;
 var running = false;
 var shooting = false;
-var deslagaessejogoplmds=false
+var deslagarissoaetio = false;
 //-------------------
 //-----Variaveis-----
 var dx, dy, targetX, targetY;
@@ -29,7 +29,7 @@ var inimigosEsquerda, inimigosCima, inimigosDireita;
 var dx;
 var qnt = 2;
 let theta = 0.0;
-let amplitude = 20.0;
+let amplitude = 50.0;
 let period = 11.0;
 let yvalues;
 //-------------------
@@ -62,9 +62,8 @@ var bg1, bg2;
 //-------------------
 function preload() {
   plataformImg = loadImage("../assets/PlataformaBaixo.png");
-  enemy_fly_anim = loadAnimation(
-    "../assets/enemy/Fly1.png",
-    "../assets/enemy/Fly2.png"
+  enemy_fly_anim = loadImage(
+    "../assets/enemy/Fly1.png"
   );
   idle_anim = loadAnimation(
     "../assets/idle/Armature_IDLE_00.png",
@@ -75,8 +74,8 @@ function preload() {
     "../assets/shotIdle/Armature_SHOT_7.png"
   );
   gameover_anim = loadAnimation(
-    "../assets/gameover/gameover01.png",
-    "../assets/gameover/gameover99.png"
+    "../assets/gameover/gameover000.png",
+    "../assets/gameover/gameover217.png"
   );
   jump_anim = loadAnimation(
     "../assets/jump/Armature_JUMP_23.png",
@@ -112,7 +111,7 @@ function setup() {
   idle_anim.frameDelay = 2;
   jump_anim.frameDelay = 4;
   run_anim.frameDelay = 3;
-  gameover_anim.frameDelay = 2;
+  gameover_anim.frameDelay = 1;
   run_atirando_anim.frameDelay = 2;
   idle_shot_anim.frameDelay = 2;
 
@@ -140,6 +139,10 @@ function setup() {
   dxD = (PI / period) * 16;
   yvaluesE = new Array(floor((width + 16) / 16));
   yvaluesD = new Array(floor((width + 16) / 16));
+  //reduzirLag
+  button = createButton("Deslagar");
+  button.position(30, 30);
+  button.mousePressed(deslagar);
 }
 function draw() {
   background(bg1);
@@ -187,47 +190,49 @@ function draw() {
     gameOver();
   }
 }
+function deslagar() {
+  deslagarissoaetio = !deslagarissoaetio;
+}
 function desenharInimigos() {
   if (
     inimigosEsquerda.length + inimigosCima.length + inimigosDireita.length <=
     qnt
   ) {
-    randomnumber = getRndInteger(0, 3);
-    if (randomnumber === 0) {
-      var inmg = createSprite(0, random(300, 400), 30, 30);
-      if(!	deslagaessejogoplmds){
-      inmg.addAnimation("fly", enemy_fly_anim);
-      inmg.changeAnimation("fly");
-      inmg.scale = 0.2;
+    setTimeout(() => {
+      randomnumber = getRndInteger(0, 3);
+      if (randomnumber === 0) {
+        var inmg = createSprite(0, random(300, 400), 30, 30);
+        if (!deslagarissoaetio) {
+          inmg.addImage(enemy_fly_anim)
+          inmg.scale = 0.2;
+        }
+        inmg.setDefaultCollider();
+        inmg.rotateToDirection = true;
+        inimigosEsquerda.add(inmg);
       }
-      inmg.setDefaultCollider();
-      inmg.rotateToDirection = true;
-      inimigosEsquerda.add(inmg);
-    }
-    if (randomnumber === 1) {
-      var inmg = createSprite(1300, random(200, 350), 30, 30);
-      if(!deslagaessejogoplmds){
-      inmg.addAnimation("fly", enemy_fly_anim);
-      inmg.changeAnimation("fly");
-      inmg.scale = 0.2;
-      inmg.mirrorY(-1);
+      if (randomnumber === 1) {
+        var inmg = createSprite(1300, random(200, 350), 30, 30);
+        if (!deslagarissoaetio) {
+          inmg.addImage(enemy_fly_anim)
+          inmg.scale = 0.2;
+        }
+        inmg.mirrorY(-1);
+        inmg.setDefaultCollider();
+        inmg.rotateToDirection = true;
+        inimigosDireita.add(inmg);
       }
-      inmg.setDefaultCollider();
-      inmg.rotateToDirection = true;
-      inimigosDireita.add(inmg);
-    }
-    if (randomnumber === 2) {
-      var inmg = createSprite(random(450, 900), 0, 30, 30);
-      if(!deslagaessejogoplmds){
-      inmg.addAnimation("fly", enemy_fly_anim);
-      inmg.changeAnimation("fly");
-      inmg.scale = 0.2;
+      if (randomnumber === 2) {
+        var inmg = createSprite(random(450, 900), 0, 30, 30);
+        if (!deslagarissoaetio) {
+          inmg.addImage(enemy_fly_anim)
+          inmg.scale = 0.2;
+        }
+        inmg.setDefaultCollider();
+        inmg.rotateToDirection = true;
+        inmg.setSpeed(5, 90);
+        inimigosCima.add(inmg);
       }
-      inmg.setDefaultCollider();
-      inmg.rotateToDirection = true;
-      inmg.setSpeed(5, 90);
-      inimigosCima.add(inmg);
-    }
+    }, 10);
   }
 }
 function checkInimigoPositions() {
@@ -247,18 +252,38 @@ function checkInimigoPositions() {
   } else if (nivel == 4) {
     qnt = 7;
     tiros = 10;
-    inimigosEsquerdaSpeedWave(7);
-    inimigosDireitaSpeedWave(7);
+    inimigosEsquerdaSpeedWave(8);
+    inimigosDireitaSpeedWave(8);
   } else if (nivel == 5) {
     qnt = 8;
     tiros = 11;
-    inimigosEsquerdaSpeedWave(9);
-    inimigosDireitaSpeedWave(9);
-  }
-  for (x = 0; x < inimigosEsquerda.length; x++) {
-    for (i = 0; i < yvaluesE.length; i++) {
-      inimigosEsquerda.get(x).setSpeed(3, yvaluesE[i] / 2);
-    }
+    inimigosEsquerdaSpeedWave(10);
+    inimigosDireitaSpeedWave(10);
+  } else if (nivel == 6) {
+    qnt = 8;
+    tiros = 15;
+    inimigosEsquerdaSpeedWave(11);
+    inimigosDireitaSpeedWave(11);
+  } else if (nivel == 7) {
+    qnt = 8;
+    tiros = 15;
+    inimigosEsquerdaSpeedWave(12);
+    inimigosDireitaSpeedWave(12);
+  } else if (nivel == 8) {
+    qnt = 12;
+    tiros = 20;
+    inimigosEsquerdaSpeedWave(13);
+    inimigosDireitaSpeedWave(13);
+  } else if (nivel == 9) {
+    qnt = 16;
+    tiros = 25;
+    inimigosEsquerdaSpeedWave(15);
+    inimigosDireitaSpeedWave(15);
+  } else if (nivel == 10) {
+    qnt = 30;
+    tiros = 50;
+    inimigosEsquerdaSpeedWave(20);
+    inimigosDireitaSpeedWave(20);
   }
   for (var i = 0; i < inimigosEsquerda.length; i++) {
     var s = inimigosEsquerda[i];
@@ -291,6 +316,16 @@ function fases() {
     nivel = 4;
   } else if (pontos >= 600 && pontos < 750) {
     nivel = 5;
+  } else if (pontos >= 750 && pontos < 1000) {
+    nivel = 6;
+  } else if (pontos >= 1000 && pontos < 1500) {
+    nivel = 7;
+  } else if (pontos >= 1500 && pontos < 2000) {
+    nivel = 8;
+  } else if (pontos >= 2000 && pontos < 2750) {
+    nivel = 9;
+  } else if (pontos >= 5000 && pontos < 600) {
+    nivel = 10;
   }
 }
 function colisores() {
@@ -303,7 +338,7 @@ function colisores() {
   jogador.overlap(inimigosDireita, enemyCollidePlayer);
 }
 function balaCollideEnemy(collector, collected) {
-  pontos += 40;
+  pontos += getRndInteger(10,50)
   var explosion = createSprite(collector.position.x, collector.position.y);
   explosion.addAnimation("balaExplosao", balaImpact_anim);
   explosion.animation.looping = false;
@@ -325,31 +360,30 @@ function perderLife() {
   life -= 5;
 }
 function morreu() {
-  if (life <= 950) {
+  if (life <= 0) {
     tela = 3;
-    gameOver();
   }
 }
 function gameOver() {
   animation(gameover_anim, width / 2, height / 2);
-  jogador.velocity.x = 0;
-  jogador.position.x = posXI;
-  jogador.position.y = posYI;
+  resetarFases();
   if (keyIsDown(13)) {
-    resetarFases();
-    life = 1000;
-    tirosDisponivel = tiros;
     tela = 2;
   }
 }
 function resetarFases() {
+  qnt = 3;
+  jogador.velocity.x = 0;
+  jogador.position.x = posXI;
+  jogador.position.y = posYI;
+  life = 1000;
+  tiros = 5;
   tirosDisponivel = tiros;
   contTiros = 0;
   nivel = 1;
-  qnt=3
   reloading = false;
   pontos = 0;
-  balas.clear();
+  balas.removeSprites();
   inimigosEsquerda.removeSprites();
   inimigosCima.removeSprites();
   inimigosDireita.removeSprites();
@@ -431,7 +465,7 @@ function mousePressed() {
   if (jogador === undefined) return;
   if (tela === 2 && contTiros >= tiros && reloading == false) {
     reloadGun();
-  } else if (reloading == false && balas.length < tiros && tela === 2) {
+  } else if (reloading == false && contTiros < tiros && tela === 2) {
     let a = getAnguloDeDisparo(jogador.position.x, jogador.position.y);
     var bala = createSprite(jogador.position.x, jogador.position.y);
     bala.rotateToDirection = true;
@@ -482,6 +516,7 @@ function inimigosEsquerdaSpeedWave(speed) {
   for (x = 0; x < inimigosEsquerda.length; x++) {
     for (i = 0; i < yvaluesE.length; i++) {
       inimigosEsquerda.get(x).setSpeed(speed, yvaluesE[i] / 2);
+      inimigosEsquerda.get(x).velocity.x = speed;
     }
   }
 }
