@@ -6,6 +6,7 @@ var reloading = false;
 var running = false;
 var shooting = false;
 var deslagarissoaetio = false;
+var ganhou = false;
 //-------------------
 //-----Variaveis-----
 var dx, dy, targetX, targetY;
@@ -14,15 +15,12 @@ var font;
 var xa, xy;
 var t1 = 0;
 var t2 = 5;
-var tela = 1;
+var tela = 4;
 //-------------------
 //-----KeyCodes------
 var cima = 87;
 var esquerda = 65;
 var direita = 68;
-//-------------------
-//-----Cenario-----
-var plataformB;
 //-------------------
 //---Inimigo Info---
 var inimigosEsquerda, inimigosCima, inimigosDireita;
@@ -50,20 +48,26 @@ var jogador, arma;
 var JUMP = 20;
 //-------------------
 //-----Cenario-----
+var plataformB;
 var GRAVITY = 1;
 var enemy_fly_anim;
 var idle_anim, idle_shot_anim;
 var gameover_anim;
+var win_img;
 var jump_anim;
 var run_anim, run_atirando_anim;
 var hurt_anim;
 var bala_anim, balaImpact_anim;
-var bg1, bg2;
+var bg0, bg1, bg2, bg3, bg4;
+var firework_anim, fireworks;
+var fundo;
 //-------------------
 function preload() {
   plataformImg = loadImage("../assets/PlataformaBaixo.png");
-  enemy_fly_anim = loadImage(
-    "../assets/enemy/Fly1.png"
+  enemy_fly_anim = loadImage("../assets/enemy/Fly1.png");
+  firework_anim = loadAnimation(
+    "../assets/fireworks/firework_red0.png",
+    "../assets/fireworks/firework_red7.png"
   );
   idle_anim = loadAnimation(
     "../assets/idle/Armature_IDLE_00.png",
@@ -77,6 +81,7 @@ function preload() {
     "../assets/gameover/gameover000.png",
     "../assets/gameover/gameover217.png"
   );
+  win_img = loadImage("../assets/win.png");
   jump_anim = loadAnimation(
     "../assets/jump/Armature_JUMP_23.png",
     "../assets/jump/Armature_JUMP_38.png"
@@ -98,8 +103,11 @@ function preload() {
     "../assets/bullet/balaColidindo/Armature_Bullet-Impact_00.png",
     "../assets/bullet/balaColidindo/Armature_Bullet-Impact_10.png"
   );
-  bg1 = loadImage("../assets/background0.png");
-  bg2 = loadImage("../assets/background.jpg");
+  bg0 = loadImage("../assets/background0.png");
+  bg1 = loadImage("../assets/background1.png");
+  bg2 = loadImage("../assets/background2.png");
+  bg3 = loadImage("../assets/background3.png");
+  bg4 = loadImage("../assets/background4.png");
   font = loadFont("../assets/True2D.ttf");
 }
 function setup() {
@@ -114,7 +122,6 @@ function setup() {
   gameover_anim.frameDelay = 1;
   run_atirando_anim.frameDelay = 2;
   idle_shot_anim.frameDelay = 2;
-
   jogador = createSprite(posXI, posYI, 50, 100);
   jogador.setDefaultCollider();
   jogador.friction = 0.05;
@@ -129,6 +136,7 @@ function setup() {
   inimigosEsquerda = new Group();
   inimigosCima = new Group();
   inimigosDireita = new Group();
+  fireworks = new Group();
 
   tirosDisponivel = tiros;
 
@@ -143,9 +151,10 @@ function setup() {
   button = createButton("Deslagar");
   button.position(30, 30);
   button.mousePressed(deslagar);
+  fundo = bg0;
 }
 function draw() {
-  background(bg1);
+  background(fundo);
   if (tela == 1) {
     textFont(font);
     textSize(40);
@@ -165,10 +174,21 @@ function draw() {
     rect(150, 20, life, 50, 10, 10);
     textFont(font);
     textSize(40);
+    fill(0);
+    text("Vida: " + life, 593, 57);
     fill(100);
     text("Vida: " + life, 592, 57);
+    fill(0);
+    text("Pontos: " + pontos, 151, 110);
+    fill(100);
     text("Pontos: " + pontos, 150, 110);
+    fill(0);
+    text("Tiros: " + tirosDisponivel, 1031, 110);
+    fill(100);
     text("Tiros: " + tirosDisponivel, 1030, 110);
+    fill(0);
+    text("Nivel: " + nivel, 601, 110);
+    fill(100);
     text("Nivel: " + nivel, 600, 110);
     //jogador functions
     jogadorChecks();
@@ -189,6 +209,29 @@ function draw() {
   if (tela == 3) {
     gameOver();
   }
+  if (tela == 4) {
+    for (let i = 0; i < 5; i++) {
+      var firework = createSprite(random(50, 1200), random(30, 400));
+      firework.addAnimation("fire", firework_anim);
+      firework.changeAnimation("fire");
+      firework.life = 30;
+      fireworks.add(firework);
+    }
+    image(win_img, 0, 0, 1280, 500);
+    textFont(font);
+    textSize(70);
+    textAlign(CENTER);
+    fill(0);
+    text(pontos, width / 2 + 1, height / 2 + 72);
+    fill(100);
+    text(pontos, width / 2, height / 2 + 72);
+    fireworks.draw();
+    resetarFases();
+    if (keyIsDown(13)) {
+      tela = 1;
+      pontos = 0;
+    }
+  }
 }
 function deslagar() {
   deslagarissoaetio = !deslagarissoaetio;
@@ -203,7 +246,7 @@ function desenharInimigos() {
       if (randomnumber === 0) {
         var inmg = createSprite(0, random(300, 400), 30, 30);
         if (!deslagarissoaetio) {
-          inmg.addImage(enemy_fly_anim)
+          inmg.addImage(enemy_fly_anim);
           inmg.scale = 0.2;
         }
         inmg.setDefaultCollider();
@@ -213,7 +256,7 @@ function desenharInimigos() {
       if (randomnumber === 1) {
         var inmg = createSprite(1300, random(200, 350), 30, 30);
         if (!deslagarissoaetio) {
-          inmg.addImage(enemy_fly_anim)
+          inmg.addImage(enemy_fly_anim);
           inmg.scale = 0.2;
         }
         inmg.mirrorY(-1);
@@ -224,7 +267,7 @@ function desenharInimigos() {
       if (randomnumber === 2) {
         var inmg = createSprite(random(450, 900), 0, 30, 30);
         if (!deslagarissoaetio) {
-          inmg.addImage(enemy_fly_anim)
+          inmg.addImage(enemy_fly_anim);
           inmg.scale = 0.2;
         }
         inmg.setDefaultCollider();
@@ -312,20 +355,26 @@ function fases() {
     nivel = 2;
   } else if (pontos >= 300 && pontos < 450) {
     nivel = 3;
+    fundo = bg1;
   } else if (pontos >= 450 && pontos < 600) {
     nivel = 4;
   } else if (pontos >= 600 && pontos < 750) {
     nivel = 5;
+    fundo = bg2;
   } else if (pontos >= 750 && pontos < 1000) {
     nivel = 6;
   } else if (pontos >= 1000 && pontos < 1500) {
     nivel = 7;
   } else if (pontos >= 1500 && pontos < 2000) {
     nivel = 8;
+    fundo = bg3;
   } else if (pontos >= 2000 && pontos < 2750) {
     nivel = 9;
-  } else if (pontos >= 5000 && pontos < 600) {
+  } else if (pontos >= 5000 && pontos < 6000) {
     nivel = 10;
+    fungo = bg4;
+  } else if (pontos >= 6000) {
+    ganhou = true;
   }
 }
 function colisores() {
@@ -338,7 +387,7 @@ function colisores() {
   jogador.overlap(inimigosDireita, enemyCollidePlayer);
 }
 function balaCollideEnemy(collector, collected) {
-  pontos += getRndInteger(10,50)
+  pontos += getRndInteger(10, 50);
   var explosion = createSprite(collector.position.x, collector.position.y);
   explosion.addAnimation("balaExplosao", balaImpact_anim);
   explosion.animation.looping = false;
@@ -360,18 +409,22 @@ function perderLife() {
   life -= 5;
 }
 function morreu() {
-  if (life <= 0) {
+  if (life <= 0 && !ganhou) {
     tela = 3;
+  } else if (life <= 0 && ganhou) {
+    tela = 4;
   }
 }
 function gameOver() {
   animation(gameover_anim, width / 2, height / 2);
   resetarFases();
   if (keyIsDown(13)) {
-    tela = 2;
+    tela = 1;
+    pontos = 0;
   }
 }
 function resetarFases() {
+  fundo = bg0;
   qnt = 3;
   jogador.velocity.x = 0;
   jogador.position.x = posXI;
@@ -382,7 +435,6 @@ function resetarFases() {
   contTiros = 0;
   nivel = 1;
   reloading = false;
-  pontos = 0;
   balas.removeSprites();
   inimigosEsquerda.removeSprites();
   inimigosCima.removeSprites();
@@ -463,9 +515,18 @@ function movimentoJogador() {
 }
 function mousePressed() {
   if (jogador === undefined) return;
+  if (tirosDisponivel <= 0) {
+    reloadGun();
+  }
   if (tela === 2 && contTiros >= tiros && reloading == false) {
     reloadGun();
-  } else if (reloading == false && contTiros < tiros && tela === 2) {
+  } else if (
+    reloading == false &&
+    contTiros < tiros &&
+    tela === 2 &&
+    tirosDisponivel > 0 &&
+    tirosDisponivel !== "Reloading..."
+  ) {
     let a = getAnguloDeDisparo(jogador.position.x, jogador.position.y);
     var bala = createSprite(jogador.position.x, jogador.position.y);
     bala.rotateToDirection = true;
