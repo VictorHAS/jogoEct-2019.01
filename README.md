@@ -16,4 +16,4 @@
 - [x] **[Etapa 9](https://github.com/VictorHAS/jogoEct-2019.01/blob/master/main/sketch.js)**
 - [x] **[Etapa 10](https://github.com/VictorHAS/jogoEct-2019.01/blob/master/main/sketch.js)**
 
-# ETAPAS CONCLUIDAS MAS AINDA EM APRIMORAMENTO!
+# Etapas concluidas. Jogo apresentado.
